@@ -28,7 +28,7 @@ class CommonUtils {
         }
 
         static void doAntiban(ClientContext ctx) {
-            int decision = Random.nextGaussian(0, 6, 1, 50);
+            int decision = Random.nextGaussian(0, 7, 1, 25);
             decision = Math.round(decision);
             switch (decision) {
                 case 0:
@@ -49,6 +49,9 @@ class CommonUtils {
                     ctx.game.tab(Game.Tab.STATS);
                     break;
                 case 5:
+                    moveMouseOffscreenRandom(ctx);
+                    break;
+                case 6:
                     afkBreak(ctx);
                     break;
             }

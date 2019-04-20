@@ -8,6 +8,7 @@ import org.powerbot.script.rt4.GameObject;
 
 import java.awt.*;
 import java.util.HashMap;
+
 import static scripts.CommonUtils.Tools.*;
 
 @Script.Manifest(name = "Parkour", description = "Agility script")
@@ -21,7 +22,7 @@ public class Parkour extends PollingScript<ClientContext> implements MessageList
     private int OBSTACLEPIPE_WEST_ID = 23138;
     private int OBSTACLEPIPE_EAST_ID = 23139;
 
-    private final int[] LOGBALANCE_BOUNDS = {80, 52, 56, 0, 0, 112};
+    private final int[] LOGBALANCE_BOUNDS = {76, 56, 48, 16, 0, 112};
     private final int[] OBSTACLENET_ONE_BOUNDS = {-40, 32, -196, -80, -56, 32};
     private final int[] TREEBRANCH_ONE_BOUNDS = {-12, 12, -104, -232, -32, 32};
     private final int[] BALANCINGROPE_BOUNDS = {0, 120, 8, 0, 52, 80};
@@ -30,13 +31,14 @@ public class Parkour extends PollingScript<ClientContext> implements MessageList
     private final int[] OBSTACLEPIPE_BOUNDS = {-44, 48, -172, 0, -68, 32};
 
     //Area tile format is (SW, NE)
-    private final Area LOGBALANCE_AREA = new Area(new Tile(2468, 3434), new Tile(2488, 3439));
+    private final Area LOGBALANCE_AREA = new Area(new Tile(2468, 3436), new Tile(2488, 3439));
     private final Area OBSTACLENET_ONE_AREA = new Area(new Tile(2471, 3426), new Tile(2477, 3430));
     private final Area TREEBRANCH_ONE_AREA = new Area(new Tile(2471, 3422, 1), new Tile(2476, 3424, 1));
     private final Area BALANCINGROPE_AREA = new Area(new Tile(2472, 3418, 2), new Tile(2479, 3422, 2));
     private final Area TREEBRANCH_TWO_AREA = new Area(new Tile(2483, 3418, 2), new Tile(2488, 3421, 2));
     private final Area OBSTACLENET_TWO_AREA = new Area(new Tile(2483, 3420, 0), new Tile(2488, 3425, 0));
-    private final Area OBSTACLEPIPE_AREA = new Area(new Tile(2483, 3426, 0), new Tile(2489, 3431, 0));
+    private final Area OBSTACLEPIPE_AREA = new Area(new Tile(2479, 3427, 0), new Tile(2479, 3434, 0), new Tile(2482, 3434), new Tile(2482, 3430),
+            new Tile(2489, 3430), new Tile(2489, 3427));
 
     private GameObject logBalance;
     private GameObject obstacleNetOne;
@@ -75,7 +77,6 @@ public class Parkour extends PollingScript<ClientContext> implements MessageList
     public void messaged(MessageEvent messageEvent) {
 
     }
-
 
 
     @Override
@@ -189,29 +190,45 @@ public class Parkour extends PollingScript<ClientContext> implements MessageList
         for (i = 0; i < obstacles.length; i++) {
             if (obstacles[i] != null) {
                 Obstacle obstacle = obstacles[i];
-                if(obstacle.getGameArea().containsOrIntersects(ctx.players.local())){
+                if (obstacle.getGameArea().containsOrIntersects(ctx.players.local())) {
                     currentLocation = obstacle.getGameObject().name();
                     GameObject obj = obstacle.getGameObject();
                     obj.bounds(obstacle.getObjectBounds()); //Not sure if this is necessary?
                     System.out.println("At obstacle: " + obj.name());
-                    if(obj.inViewport()){
+                    if (obj.inViewport()) {
                         System.out.println("Obstacle in viewport: " + obj.name());
-                        if(obj.click(obstacle.getAction())){
+
+                        if (obj.click(obstacle.getAction())) {
                             System.out.println("Clicked");
-                        } else if(obj.interact(obstacle.getAction())){
+                        } else if (obj.interact(obstacle.getAction())) {
                             System.out.println("Interacted");
                         } else { //Looks like we need to refresh our object
                             GameObject tmp = ctx.objects.select().name(obj.name()).nearest().poll();
                             tmp.interact(obstacle.getAction());
                             System.out.println("[DEBUG] interacting with tmp");
                         }
-                        Condition.wait(()->(ctx.players.local().animation() == -1), 500, 5);
+                        /* HANDLE object-specific actions (TODO: encapsulate in object class) */
+                        /* HANDLE pipe */
+
+                        if ((ctx.players.local().tile().x() == 2487) || ctx.players.local().tile().x() == 2484) {
+                            while ((3430 < ctx.players.local().tile().y()) && (ctx.players.local().tile().y() < 3437)) {
+                                Condition.sleep(Random.nextInt(500, 1500));
+                            }
+                        }
+                        Condition.wait(() -> (ctx.players.local().animation() == -1), 500, 5);
                     } else {
                         System.out.println("Obstacle not in viewport: " + obj.name());
-                        ctx.movement.step(obj.tile().derive(1, 1));
-                        Condition.wait(()->(ctx.players.local().animation() == -1), 500, 5);
+                        /* HANDLE obstacle net */
+                        if (obj.name().equals("Obstacle net")) {
+                            ctx.camera.turnTo(obj);
+                        } else {
+                            ctx.movement.step(obj.tile().derive(1, 1));
+                            Condition.wait(() -> (ctx.players.local().animation() == -1), 500, 5);
+                        }
                     }
-                    Condition.sleep(Random.nextGaussian(500, 6000, 3000, 100));
+                    Condition.sleep(Random.nextGaussian(500, 6000, 1000, 100));
+                    Condition.wait(() -> (ctx.players.local().animation() == -1 && !ctx.players.local().inMotion()), 500, 5); //Wait some more if we are still moving for some reason
+
                 }
 
             }
