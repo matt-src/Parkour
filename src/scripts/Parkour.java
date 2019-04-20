@@ -194,22 +194,15 @@ public class Parkour extends PollingScript<ClientContext> implements MessageList
                     currentLocation = obstacle.getGameObject().name();
                     GameObject obj = obstacle.getGameObject();
                     obj.bounds(obstacle.getObjectBounds()); //Not sure if this is necessary?
-                    System.out.println("At obstacle: " + obj.name());
                     if (obj.inViewport()) {
-                        System.out.println("Obstacle in viewport: " + obj.name());
-
-                        if (obj.click(obstacle.getAction())) {
-                            System.out.println("Clicked");
-                        } else if (obj.interact(obstacle.getAction())) {
-                            System.out.println("Interacted");
-                        } else { //Looks like we need to refresh our object
+                        if (!obj.click(obstacle.getAction())) {
+                            //Something is wrong, we need to refresh our object
                             GameObject tmp = ctx.objects.select().name(obj.name()).nearest().poll();
                             tmp.interact(obstacle.getAction());
                             System.out.println("[DEBUG] interacting with tmp");
                         }
-                        /* HANDLE object-specific actions (TODO: encapsulate in object class) */
+                        /* [HANDLE] comments denote object-specific actions (TODO: encapsulate in object class) */
                         /* HANDLE pipe */
-
                         if ((ctx.players.local().tile().x() == 2487) || ctx.players.local().tile().x() == 2484) {
                             while ((3430 < ctx.players.local().tile().y()) && (ctx.players.local().tile().y() < 3437)) {
                                 Condition.sleep(Random.nextInt(500, 1500));
