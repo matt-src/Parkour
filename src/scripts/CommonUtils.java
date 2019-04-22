@@ -12,11 +12,11 @@ import java.awt.*;
 class CommonUtils {
     static class Tools {
 
-        static long xpHr(ClientContext ctx, long startXp, long startTime) {
-            long xpGained = ctx.skills.experience(Constants.SKILLS_AGILITY) - startXp;
+        static long perHour(ClientContext ctx, long startValue, long currentValue, long startTime) {
+            long valueGained = currentValue - startValue;
             long elapsed = (System.currentTimeMillis() - startTime) / 1000;
             double hoursElapsed = (float) elapsed / 3600;
-            return Math.round((1 / hoursElapsed) * xpGained);
+            return Math.round((1 / hoursElapsed) * valueGained);
         }
 
         static String formatTime(long _elapsed) { //Format time to an hours, minutes, seconds string
@@ -47,9 +47,6 @@ class CommonUtils {
                 case 4:
                     System.out.println("Checking stats");
                     ctx.game.tab(Game.Tab.STATS);
-                    break;
-                case 5:
-                    moveMouseOffscreenRandom(ctx);
                     break;
                 case 6:
                     afkBreak(ctx);
