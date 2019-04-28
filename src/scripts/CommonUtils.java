@@ -38,7 +38,7 @@ class CommonUtils {
                     moveMouseOffscreenRandom(ctx);
                     break;
                 case 2:
-                    ctx.camera.turnTo(ctx.objects.nearest().poll());
+                    ctx.camera.turnTo(ctx.objects.select().nearest().poll());
                     break;
                 case 3:
                     System.out.println("Changing camera angle");

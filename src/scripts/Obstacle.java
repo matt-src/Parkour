@@ -1,29 +1,32 @@
 package scripts;
 
 import org.powerbot.script.Area;
-import org.powerbot.script.rt4.GameObject;
+import org.powerbot.script.Tile;
 
 public class Obstacle {
     private int id;
-    private GameObject gameObject;
-    private Area gameArea;
+    private String name; //Object name
+    private Area gameArea; //Game area to check if player is in, to know if we should use this obstacle
+    private Tile[] obstacleTiles; //Tiles that our obstacle may be on
     private int[] objectBounds;
-    private String action;
+    private String codeName; //eg. "Gap Four"
 
-    Obstacle(int id, GameObject gameObject, Area gameArea, int[] objectBounds, String action) {
+    Obstacle(int id, String name, Area gameArea, Tile[] obstacleTiles, int[] objectBounds, String codeName) {
         this.id = id;
-        this.gameObject = gameObject;
+        this.name = name;
         this.gameArea = gameArea;
+        this.obstacleTiles = obstacleTiles;
         this.objectBounds = objectBounds;
+        this.codeName = codeName;
     }
 
-    GameObject getGameObject() {
-        return gameObject;
-    }
+    public String getName() { return name; }
 
-    public void setGameObject(GameObject gameObject) {
-        this.gameObject = gameObject;
-    }
+    public void setName(String name) { this.name = name; }
+
+    public Tile[] getObstacleTiles() { return obstacleTiles; }
+
+    public void setObstacleTiles(Tile[] obstacleTiles) { this.obstacleTiles = obstacleTiles; }
 
     Area getGameArea() {
         return gameArea;
@@ -49,12 +52,6 @@ public class Obstacle {
         this.id = id;
     }
 
-    String getAction() {
-        return action;
-    }
-
-    public void setAction(String action) {
-        this.action = action;
-    }
+    public String getCodeName() { return this.codeName; }
 
 }
