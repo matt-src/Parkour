@@ -206,20 +206,23 @@ public class Parkour extends PollingScript<ClientContext> implements PaintListen
             Condition.wait(ctx.movement::running, 100, 50);
             return;
         }
-        /* Pick up mark of grace if one is in our area */
-        GroundItem mark = ctx.groundItems.select().name("Mark of grace").poll();
-        if (mark != null && mark.valid() && ctx.movement.reachable(ctx.players.local(), mark)) {
-            if (mark.inViewport()) mark.interact("Take");
-             else ctx.movement.step(mark);
-            Condition.wait(notMoving, 250, 40);
-            return;
-        }
+
         /* Cycle obstacles and traverse the course */
         Iterator<Obstacle> iter = obstacles.iterator();
         Obstacle obstacle;
         while (iter.hasNext()) {
             obstacle = iter.next();
             if (obstacle.getGameArea().containsOrIntersects(ctx.players.local())) {
+                /* Pick up mark of grace if one is in our area */
+                GroundItem mark = ctx.groundItems.select().name("Mark of grace").poll();
+                if (mark != null && obstacle.getGameArea().containsOrIntersects(mark)) {
+                    System.out.println("Mark at " + obstacle.getCodeName());
+                    if (mark.inViewport()) mark.interact("Take");
+                    else ctx.movement.step(mark);
+                    Condition.sleep(Random.nextGaussian(50, 500, 200, 100));
+                    Condition.wait(notMoving, 250, 40);
+                    return;
+                }
                 String codeName = obstacle.getCodeName();
                 /* HANDLE adjusting camera for rough wall so we don't click on the wrong side of the wall */
                 if (codeName.equals("Rough wall") && roughWall != null && roughWall.valid()) {
@@ -240,8 +243,7 @@ public class Parkour extends PollingScript<ClientContext> implements PaintListen
                     obj.bounds(obstacle.getObjectBounds()); //Not sure if this is necessary?
                     if (obj.inViewport()) {
                         if (!obj.interact(obj.actions()[0])) ctx.movement.step(obj);
-                        else ctx.movement.step(obj); //Object is valid but it's not in the viewport, stepping
-                    }
+                    } else ctx.movement.step(obj); //Object is valid but it's not in the viewport, stepping
                     Condition.sleep(Random.nextGaussian(0, 3000, 300, 100));
                     Condition.wait(notMoving, 250, 40);
                     Condition.sleep(100);
@@ -249,45 +251,44 @@ public class Parkour extends PollingScript<ClientContext> implements PaintListen
                 }
             }
         }
-        Condition.sleep(25);
     }
 
-        private void printObjects (HashMap < String, GameObject > objects){
-            System.out.println("Object state---------------------");
-            objects.forEach((name, object) -> System.out.println(name + ", " + object.name() + ", " + object.id() + ", " + object.tile()));
-        }
+    private void printObjects(HashMap<String, GameObject> objects) {
+        System.out.println("Object state---------------------");
+        objects.forEach((name, object) -> System.out.println(name + ", " + object.name() + ", " + object.id() + ", " + object.tile()));
+    }
 
-        private boolean isValid (GameObject g, Obstacle o){
-            if (g == null) {
-                return false;
-            } else if (!Arrays.asList(o.getObstacleTiles()).contains(g.tile())) {
-                return false;
-            } else if (g.id() != o.getId()) return false;
-            return true;
-        }
+    private boolean isValid(GameObject g, Obstacle o) {
+        if (g == null) {
+            return false;
+        } else if (!Arrays.asList(o.getObstacleTiles()).contains(g.tile())) {
+            return false;
+        } else if (g.id() != o.getId()) return false;
+        return true;
+    }
 
-        private void step (Locatable loc){
-            ctx.movement.step(loc);
-            Condition.wait(notMoving, 250, 40); //Wait some more if we are still moving for some reason
-            Condition.sleep(100); //Double check with 100ms buffer prevents momentary animation==-1 in obstacle interaction from breaking wait
-            Condition.wait(notMoving, 250, 40); //Wait some more if we are still moving for some reason
-        }
+    private void step(Locatable loc) {
+        ctx.movement.step(loc);
+        Condition.wait(notMoving, 250, 40); //Wait some more if we are still moving for some reason
+        Condition.sleep(100); //Double check with 100ms buffer prevents momentary animation==-1 in obstacle interaction from breaking wait
+        Condition.wait(notMoving, 250, 40); //Wait some more if we are still moving for some reason
+    }
 
-        private void setupVarrockObstacles () {
-            System.out.println("Initializing obstacles");
-            //TODO: this could be done by a loop if object info is in an array (eg. array of all varrock areas, array of all varrock bounds, etc.)
-            roughWall_O = new Obstacle(ROUGHWALL_ID, "Rough wall", ROUGHWALL_AREA, ROUGHWALL_OBS_TILES, ROUGHWALL_BOUNDS, "Rough Wall");
-            clothesline_O = new Obstacle(CLOTHESLINE_ID, "Clothesline", CLOTHESLINE_AREA, CLOTHESLINE_OBS_TILES, CLOTHESLINE_BOUNDS, "Clothesline");
-            gapOne_O = new Obstacle(GAP_ONE_ID, "Gap", GAP_ONE_AREA, GAP_ONE_OBS_TILES, GAP_ONE_BOUNDS, "Gap One");
-            wall_O = new Obstacle(WALL_ID, "Wall", WALL_AREA, WALL_OBS_TILES, WALL_BOUNDS, "Wall");
-            gapTwo_O = new Obstacle(GAP_TWO_ID, "Gap", GAP_TWO_AREA, GAP_TWO_OBS_TILES, GAP_TWO_BOUNDS, "Gap Two");
-            gapThree_O = new Obstacle(GAP_THREE_ID, "Gap", GAP_THREE_AREA, GAP_THREE_OBS_TILES, GAP_THREE_BOUNDS, "Gap Three");
-            gapFour_O = new Obstacle(GAP_FOUR_ID, "Gap", GAP_FOUR_AREA, GAP_FOUR_OBS_TILES, GAP_FOUR_BOUNDS, "Gap Four");
-            ledge_O = new Obstacle(LEDGE_ID, "Ledge", LEDGE_AREA, LEDGE_OBS_TILES, LEDGE_BOUNDS, "Ledge");
-            edge_O = new Obstacle(EDGE_ID, "Edge", EDGE_AREA, EDGE_OBS_TILES, EDGE_BOUNDS, "Edge");
-            Obstacle[] obstaclesArray = new Obstacle[]{roughWall_O, clothesline_O, gapOne_O, wall_O, gapTwo_O, gapThree_O, gapFour_O, ledge_O, edge_O};
-            obstacles.addAll(Arrays.asList(obstaclesArray));
-        }
+    private void setupVarrockObstacles() {
+        System.out.println("Initializing obstacles");
+        //TODO: this could be done by a loop if object info is in an array (eg. array of all varrock areas, array of all varrock bounds, etc.)
+        roughWall_O = new Obstacle(ROUGHWALL_ID, "Rough wall", ROUGHWALL_AREA, ROUGHWALL_OBS_TILES, ROUGHWALL_BOUNDS, "Rough Wall");
+        clothesline_O = new Obstacle(CLOTHESLINE_ID, "Clothesline", CLOTHESLINE_AREA, CLOTHESLINE_OBS_TILES, CLOTHESLINE_BOUNDS, "Clothesline");
+        gapOne_O = new Obstacle(GAP_ONE_ID, "Gap", GAP_ONE_AREA, GAP_ONE_OBS_TILES, GAP_ONE_BOUNDS, "Gap One");
+        wall_O = new Obstacle(WALL_ID, "Wall", WALL_AREA, WALL_OBS_TILES, WALL_BOUNDS, "Wall");
+        gapTwo_O = new Obstacle(GAP_TWO_ID, "Gap", GAP_TWO_AREA, GAP_TWO_OBS_TILES, GAP_TWO_BOUNDS, "Gap Two");
+        gapThree_O = new Obstacle(GAP_THREE_ID, "Gap", GAP_THREE_AREA, GAP_THREE_OBS_TILES, GAP_THREE_BOUNDS, "Gap Three");
+        gapFour_O = new Obstacle(GAP_FOUR_ID, "Gap", GAP_FOUR_AREA, GAP_FOUR_OBS_TILES, GAP_FOUR_BOUNDS, "Gap Four");
+        ledge_O = new Obstacle(LEDGE_ID, "Ledge", LEDGE_AREA, LEDGE_OBS_TILES, LEDGE_BOUNDS, "Ledge");
+        edge_O = new Obstacle(EDGE_ID, "Edge", EDGE_AREA, EDGE_OBS_TILES, EDGE_BOUNDS, "Edge");
+        Obstacle[] obstaclesArray = new Obstacle[]{roughWall_O, clothesline_O, gapOne_O, wall_O, gapTwo_O, gapThree_O, gapFour_O, ledge_O, edge_O};
+        obstacles.addAll(Arrays.asList(obstaclesArray));
+    }
 
    /* private void setupGnomeObstacles() {
         if (LOGBALANCE_AREA.containsOrIntersects(ctx.players.local())) {
@@ -349,4 +350,4 @@ public class Parkour extends PollingScript<ClientContext> implements PaintListen
         }
     }*/
 
-    }
+}
