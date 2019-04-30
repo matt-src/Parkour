@@ -242,7 +242,7 @@ public class Parkour extends PollingScript<ClientContext> implements PaintListen
                     GameObject obj = objects.get(codeName);
                     obj.bounds(obstacle.getObjectBounds()); //Not sure if this is necessary?
                     if (obj.inViewport()) {
-                        if (!obj.interact(obj.actions()[0])) ctx.movement.step(obj);
+                        if (!obj.interact(obj.actions()[0])) step(ctx, obj);
                     } else step(ctx, obj); //Object is valid but it's not in the viewport, stepping
                     Condition.sleep(Random.nextGaussian(0, 3000, 300, 100));
                     Condition.wait(notMoving, 250, 40);
