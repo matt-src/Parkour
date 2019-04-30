@@ -218,9 +218,7 @@ public class Parkour extends PollingScript<ClientContext> implements PaintListen
                 if (mark != null && obstacle.getGameArea().containsOrIntersects(mark)) {
                     System.out.println("Mark at " + obstacle.getCodeName());
                     if (mark.inViewport()) mark.interact("Take");
-                    else step(ctx, mark);
-                    Condition.sleep(Random.nextGaussian(50, 500, 200, 100));
-                    Condition.wait(notMoving, 250, 40);
+                    else step(ctx, mark.tile().derive(Random.nextInt(-1, 1), Random.nextInt(-1, 1)));
                     return;
                 }
                 String codeName = obstacle.getCodeName();
@@ -236,21 +234,20 @@ public class Parkour extends PollingScript<ClientContext> implements PaintListen
                     if (obj != null && Arrays.asList(obstacle.getObstacleTiles()).contains(obj.tile())) {
                         objects.put(obstacle.getCodeName(), obj);
                         //printObjects(objects);
-                    } else step(ctx, obstacle.getObstacleTiles()[0]); //Tile was wrong or obj was null, so just step
+                    } else step(ctx, obstacle.getObstacleTiles()[0].derive(Random.nextInt(-1, 1), Random.nextInt(-1, 1))); //Tile was wrong or obj was null, so just step
                 } else {
                     /* An object is in the HashMap and valid, let's try to interact with it */
                     GameObject obj = objects.get(codeName);
                     obj.bounds(obstacle.getObjectBounds()); //Not sure if this is necessary?
                     if (obj.inViewport()) {
                         if (!obj.interact(obj.actions()[0])) step(ctx, obj);
-                    } else step(ctx, obj); //Object is valid but it's not in the viewport, stepping
-                    Condition.sleep(Random.nextGaussian(0, 3000, 300, 100));
-                    Condition.wait(notMoving, 250, 40);
-                    Condition.sleep(100);
-                    Condition.wait(notMoving, 250, 40);
+                    } else step(ctx, obj.tile().derive(Random.nextInt(-1, 1), Random.nextInt(-1, 1))); //Object is valid but it's not in the viewport, stepping
                 }
             }
         }
+        Condition.wait(notMoving, 250, 40);
+        Condition.sleep(Random.nextGaussian(100, 200, 150, 100));
+        Condition.wait(notMoving, 250, 40);
     }
 
     private void printObjects(HashMap<String, GameObject> objects) {
