@@ -2,15 +2,29 @@ package scripts;
 
 import org.powerbot.script.Client;
 import org.powerbot.script.Condition;
+import org.powerbot.script.Locatable;
 import org.powerbot.script.Random;
 import org.powerbot.script.rt4.ClientContext;
 import org.powerbot.script.rt4.Constants;
 import org.powerbot.script.rt4.Game;
 
 import java.awt.*;
+import java.util.concurrent.Callable;
 
 class CommonUtils {
     static class Tools {
+
+        static void step(ClientContext ctx, Locatable loc) {
+            final Callable<Boolean> notMoving = () -> (ctx.players.local().animation() == -1 && !ctx.players.local().inMotion());
+            if (loc.tile().matrix(ctx).inViewport()) {
+                loc.tile().matrix(ctx).interact("Walk here");
+            } else {
+                ctx.movement.step(loc);
+            }
+            Condition.wait(notMoving, 250, 40); //Wait some more if we are still moving for some reason
+            Condition.sleep(100); //Double check with 100ms buffer prevents momentary animation==-1 in obstacle interaction from breaking wait
+            Condition.wait(notMoving, 250, 40); //Wait some more if we are still moving for some reason
+        }
 
         static long perHour(ClientContext ctx, long startValue, long currentValue, long startTime) {
             long valueGained = currentValue - startValue;

@@ -188,7 +188,7 @@ public class Parkour extends PollingScript<ClientContext> implements PaintListen
     public void poll() {
         /* If we're on the ground away from the rough wall, walk back to the start*/
         if (ctx.players.local().tile().floor() == 0 && !ROUGHWALL_AREA.contains(ctx.players.local())) {
-            step(VARROCK_START_LOCATION.derive(2, 2));
+            step(ctx, VARROCK_START_LOCATION.derive(Random.nextInt(-2, 2), Random.nextInt(-2, 2)));
             return;
         }
         /* Handle Antiban */
@@ -218,7 +218,7 @@ public class Parkour extends PollingScript<ClientContext> implements PaintListen
                 if (mark != null && obstacle.getGameArea().containsOrIntersects(mark)) {
                     System.out.println("Mark at " + obstacle.getCodeName());
                     if (mark.inViewport()) mark.interact("Take");
-                    else ctx.movement.step(mark);
+                    else step(ctx, mark);
                     Condition.sleep(Random.nextGaussian(50, 500, 200, 100));
                     Condition.wait(notMoving, 250, 40);
                     return;
@@ -236,14 +236,14 @@ public class Parkour extends PollingScript<ClientContext> implements PaintListen
                     if (obj != null && Arrays.asList(obstacle.getObstacleTiles()).contains(obj.tile())) {
                         objects.put(obstacle.getCodeName(), obj);
                         //printObjects(objects);
-                    } else step(obstacle.getObstacleTiles()[0]); //Tile was wrong or obj was null, so just step
+                    } else step(ctx, obstacle.getObstacleTiles()[0]); //Tile was wrong or obj was null, so just step
                 } else {
                     /* An object is in the HashMap and valid, let's try to interact with it */
                     GameObject obj = objects.get(codeName);
                     obj.bounds(obstacle.getObjectBounds()); //Not sure if this is necessary?
                     if (obj.inViewport()) {
                         if (!obj.interact(obj.actions()[0])) ctx.movement.step(obj);
-                    } else ctx.movement.step(obj); //Object is valid but it's not in the viewport, stepping
+                    } else step(ctx, obj); //Object is valid but it's not in the viewport, stepping
                     Condition.sleep(Random.nextGaussian(0, 3000, 300, 100));
                     Condition.wait(notMoving, 250, 40);
                     Condition.sleep(100);
@@ -265,13 +265,6 @@ public class Parkour extends PollingScript<ClientContext> implements PaintListen
             return false;
         } else if (g.id() != o.getId()) return false;
         return true;
-    }
-
-    private void step(Locatable loc) {
-        ctx.movement.step(loc);
-        Condition.wait(notMoving, 250, 40); //Wait some more if we are still moving for some reason
-        Condition.sleep(100); //Double check with 100ms buffer prevents momentary animation==-1 in obstacle interaction from breaking wait
-        Condition.wait(notMoving, 250, 40); //Wait some more if we are still moving for some reason
     }
 
     private void setupVarrockObstacles() {
